@@ -1,0 +1,59 @@
+### =====================================================
+### M365 Copilot Retrieval API
+### =====================================================
+### 1. Fill in tenantId and clientId below
+### 2. Click "Send Request" on each step (1 → 2 → 3)
+###    Everything flows automatically — no copy-pasting!
+### =====================================================
+
+### ---------- CONFIGURATION ----------
+
+@tenantId = YOUR_TENANT_ID
+@clientId = YOUR_CLIENT_ID
+
+### =====================================================
+### STEP 1: Start device code login
+### Click "Send Request", then:
+###   1. Look at the response for "user_code"
+###   2. Open https://microsoft.com/devicelogin
+###   3. Enter the code and sign in
+###   4. Come back here and click Step 2
+### =====================================================
+
+# @name deviceCode
+POST https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/devicecode
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}&scope=https://graph.microsoft.com/Sites.Read.All offline_access
+
+### =====================================================
+### STEP 2: Get the token
+### (Only after you've signed in at the browser!)
+### Click "Send Request" — device_code flows automatically.
+### =====================================================
+
+# @name getToken
+POST https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn:ietf:params:oauth:grant-type:device_code&client_id={{clientId}}&device_code={{deviceCode.response.body.device_code}}
+
+### =====================================================
+### STEP 3: Call the Copilot Retrieval API
+### Click "Send Request" — access_token flows automatically.
+### =====================================================
+
+# @name retrievalAPI
+POST https://graph.microsoft.com/v1.0/copilot/retrieval
+Authorization: Bearer {{getToken.response.body.access_token}}
+Content-Type: application/json
+
+{
+    "queryString": "Q4 budget planning",
+    "dataSource": "sharePoint",
+    "filterExpression": "FileType:docx",
+    "resourceMetadata": [
+        "title", "author"
+    ],
+    "maximumNumberOfResults": 10
+}
